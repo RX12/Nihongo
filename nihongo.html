@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japanese Kana Learner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .kana-char, .jp-font { /* Class for Japanese characters */
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        .focusable:focus-visible {
+            outline: 2px solid rgb(59 130 246); /* blue-500 */
+            outline-offset: 2px;
+        }
+        .btn {
+            @apply px-4 py-2 rounded-lg font-semibold transition-all duration-150 ease-in-out focusable;
+        }
+        .btn-primary {
+            @apply bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-md;
+        }
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-700 hover:bg-gray-300 active:bg-gray-400 shadow-sm;
+        }
+        .btn-red {
+            @apply bg-red-500 text-white hover:bg-red-600 active:bg-red-700 shadow-md;
+        }
+        .btn-warning {
+            @apply bg-yellow-500 text-white hover:bg-yellow-600 active:bg-yellow-700 shadow-md;
+        }
+        .btn-green {
+            @apply bg-green-500 text-white hover:bg-green-600 active:bg-green-700 shadow-md;
+        }
+        .kana-display {
+            /* Responsive font size for the Kana character */
+            @apply text-7xl sm:text-8xl md:text-9xl font-bold my-4 sm:my-6 kana-char;
+        }
+        .feedback-correct {
+            @apply text-green-600;
+        }
+        .feedback-incorrect {
+            @apply text-red-600;
+        }
+        .kana-enter {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        /* Progress Bar Styles */
+        .progress-bar-container {
+            @apply w-full bg-gray-200 rounded-full h-4 mb-4 overflow-hidden shadow;
+        }
+        .progress-bar {
+            @apply bg-blue-600 h-4 rounded-full transition-all duration-300 ease-in-out text-xs flex items-center justify-center text-white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4 antialiased">
+
+    <div id="app-container" class="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-lg">
+
+        <!-- Settings Screen -->
+        <div id="settingsScreen">
+            <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6 sm:mb-8 jp-font">日本語学習 <span class="text-sm text-gray-500 block">Kana Learner</span></h1>
+            <div class="space-y-4 sm:space-y-6">
+                <p class="text-gray-700 text-sm sm:text-base">Select the character sets you want to practice:</p>
+                <div class="space-y-3">
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+                        <input type="checkbox" id="useHiragana" class="form-checkbox h-5 w-5 text-blue-600 rounded focusable">
+                        <span class="ml-3 text-gray-700 text-base sm:text-lg jp-font">ひらがな (Hiragana)</span>
+                    </label>
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+                        <input type="checkbox" id="useKatakana" class="form-checkbox h-5 w-5 text-blue-600 rounded focusable">
+                        <span class="ml-3 text-gray-700 text-base sm:text-lg jp-font">カタカナ (Katakana)</span>
+                    </label>
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+                        <input type="checkbox" id="useExtendedKatakana" class="form-checkbox h-5 w-5 text-blue-600 rounded focusable">
+                        <span class="ml-3 text-gray-700 text-base sm:text-lg jp-font">拡張カタカナ (Extended Katakana)</span>
+                    </label>
+                </div>
+                 <p id="noSetSelectedError" class="text-red-500 text-sm mt-2 hidden">Please select at least one character set.</p>
+                <button id="startButton" class="w-full btn btn-primary text-base sm:text-lg py-2 sm:py-3">Start Learning</button>
+            </div>
+        </div>
+
+        <!-- Learning Screen (Hidden by default) -->
+        <div id="learningScreen" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl sm:text-2xl font-semibold text-gray-700 jp-font">Practice Mode</h2>
+                <button id="backToSettingsButton" class="btn btn-secondary text-xs sm:text-sm">&larr; Change Sets</button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-2 text-xs sm:text-sm text-gray-600 text-center" id="progressLabel">Mastered: 0 / 0</div>
+            <div class="progress-bar-container">
+                <div id="progressBar" class="progress-bar" style="width: 0%;"></div>
+            </div>
+
+            <div id="characterDisplay" class="kana-display text-center text-gray-800"></div>
+
+            <div class="mt-4 mb-4">
+                <input type="text" id="romajiInput" placeholder="Type Romaji here..." class="w-full p-3 border border-gray-300 rounded-lg text-base sm:text-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent focusable" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <button id="submitGuessButton" class="btn btn-green w-full text-sm sm:text-base">Submit Guess</button>
+                <button id="showAnswerButton" class="btn btn-secondary w-full text-sm sm:text-base">Show Answer</button>
+            </div>
+
+            <div id="feedbackArea" class="text-center text-base sm:text-lg min-h-[2.5em] mb-4 font-semibold"></div>
+
+            <div class="grid grid-cols-2 gap-2 text-center text-gray-600 mb-4 text-xs sm:text-sm">
+                <span id="queueCountDisplay" class="p-1 sm:p-2 bg-gray-100 rounded-md">In Queue: 0</span>
+                <span id="attemptCountDisplay" class="p-1 sm:p-2 bg-gray-100 rounded-md">Attempts: 0</span>
+            </div>
+
+            <button id="nextCharacterButton" class="w-full btn btn-primary py-2 sm:py-3 text-base sm:text-lg mb-3" disabled>Next Character &rarr;</button>
+            <button id="resetSessionButton" class="w-full btn btn-warning py-2 text-sm sm:text-base">Reset Current Session</button>
+            
+            <div id="completionMessage" class="hidden text-center mt-6 sm:mt-8 p-4 sm:p-6 bg-green-50 rounded-lg">
+                <h3 class="text-xl sm:text-2xl font-semibold text-green-700 jp-font">🎉素晴らしい！(Subarashii!)🎉</h3>
+                <p class="text-gray-700 mt-2 text-sm sm:text-base">You've completed the session!</p>
+                <p id="finalScore" class="text-base sm:text-lg font-medium text-gray-800 mt-2"></p>
+                <button id="restartButton" class="mt-4 btn btn-primary text-sm sm:text-base">Practice Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Character Data (same as before) ---
+        const hiraganaChars = [
+            { kana: "あ", romaji: "a" }, { kana: "い", romaji: "i" }, { kana: "う", romaji: "u" }, { kana: "え", romaji: "e" }, { kana: "お", romaji: "o" },
+            { kana: "か", romaji: "ka" }, { kana: "き", romaji: "ki" }, { kana: "く", romaji: "ku" }, { kana: "け", romaji: "ke" }, { kana: "こ", romaji: "ko" },
+            { kana: "さ", romaji: "sa" }, { kana: "し", romaji: "shi" }, { kana: "す", romaji: "su" }, { kana: "せ", romaji: "se" }, { kana: "そ", romaji: "so" },
+            { kana: "た", romaji: "ta" }, { kana: "ち", romaji: "chi" }, { kana: "つ", romaji: "tsu" }, { kana: "て", romaji: "te" }, { kana: "と", romaji: "to" },
+            { kana: "な", romaji: "na" }, { kana: "に", romaji: "ni" }, { kana: "ぬ", romaji: "nu" }, { kana: "ね", romaji: "ne" }, { kana: "の", romaji: "no" },
+            { kana: "は", romaji: "ha" }, { kana: "ひ", romaji: "hi" }, { kana: "ふ", romaji: "fu" }, { kana: "へ", romaji: "he" }, { kana: "ほ", romaji: "ho" },
+            { kana: "ま", romaji: "ma" }, { kana: "み", romaji: "mi" }, { kana: "む", romaji: "mu" }, { kana: "め", romaji: "me" }, { kana: "も", romaji: "mo" },
+            { kana: "や", romaji: "ya" }, { kana: "ゆ", romaji: "yu" }, { kana: "よ", romaji: "yo" },
+            { kana: "ら", romaji: "ra" }, { kana: "り", romaji: "ri" }, { kana: "る", romaji: "ru" }, { kana: "れ", romaji: "re" }, { kana: "ろ", romaji: "ro" },
+            { kana: "わ", romaji: "wa" }, { kana: "を", romaji: "o" }, { kana: "ん", romaji: "n" },
+            { kana: "が", romaji: "ga" }, { kana: "ぎ", romaji: "gi" }, { kana: "ぐ", romaji: "gu" }, { kana: "げ", romaji: "ge" }, { kana: "ご", romaji: "go" },
+            { kana: "ざ", romaji: "za" }, { kana: "じ", romaji: "ji" }, { kana: "ず", romaji: "zu" }, { kana: "ぜ", romaji: "ze" }, { kana: "ぞ", romaji: "zo" },
+            { kana: "だ", romaji: "da" }, { kana: "ぢ", romaji: "ji" }, { kana: "づ", romaji: "zu" }, { kana: "で", romaji: "de" }, { kana: "ど", romaji: "do" },
+            { kana: "ば", romaji: "ba" }, { kana: "び", romaji: "bi" }, { kana: "ぶ", romaji: "bu" }, { kana: "べ", romaji: "be" }, { kana: "ぼ", romaji: "bo" },
+            { kana: "ぱ", romaji: "pa" }, { kana: "ぴ", romaji: "pi" }, { kana: "ぷ", romaji: "pu" }, { kana: "ぺ", romaji: "pe" }, { kana: "ぽ", romaji: "po" },
+            { kana: "きゃ", romaji: "kya" }, { kana: "きゅ", romaji: "kyu" }, { kana: "きょ", romaji: "kyo" },
+            { kana: "しゃ", romaji: "sha" }, { kana: "しゅ", romaji: "shu" }, { kana: "しょ", romaji: "sho" },
+            { kana: "ちゃ", romaji: "cha" }, { kana: "ちゅ", romaji: "chu" }, { kana: "ちょ", romaji: "cho" },
+            { kana: "にゃ", romaji: "nya" }, { kana: "にゅ", romaji: "nyu" }, { kana: "にょ", romaji: "nyo" },
+            { kana: "ひゃ", romaji: "hya" }, { kana: "ひゅ", romaji: "hyu" }, { kana: "ひょ", romaji: "hyo" },
+            { kana: "みゃ", romaji: "mya" }, { kana: "みゅ", romaji: "myu" }, { kana: "みょ", romaji: "myo" },
+            { kana: "りゃ", romaji: "rya" }, { kana: "りゅ", romaji: "ryu" }, { kana: "りょ", romaji: "ryo" },
+            { kana: "ぎゃ", romaji: "gya" }, { kana: "ぎゅ", romaji: "gyu" }, { kana: "ぎょ", romaji: "gyo" },
+            { kana: "じゃ", romaji: "ja" }, { kana: "じゅ", romaji: "ju" }, { kana: "じょ", romaji: "jo" },
+            { kana: "ぢゃ", romaji: "ja" }, { kana: "ぢゅ", romaji: "ju" }, { kana: "ぢょ", romaji: "jo" },
+            { kana: "びゃ", romaji: "bya" }, { kana: "びゅ", romaji: "byu" }, { kana: "びょ", romaji: "byo" },
+            { kana: "ぴゃ", romaji: "pya" }, { kana: "ぴゅ", romaji: "pyu" }, { kana: "ぴょ", romaji: "pyo" }
+        ];
+        const katakanaChars = [
+            { kana: "ア", romaji: "a" }, { kana: "イ", romaji: "i" }, { kana: "ウ", romaji: "u" }, { kana: "エ", romaji: "e" }, { kana: "オ", romaji: "o" },
+            { kana: "カ", romaji: "ka" }, { kana: "キ", romaji: "ki" }, { kana: "ク", romaji: "ku" }, { kana: "ケ", romaji: "ke" }, { kana: "コ", romaji: "ko" },
+            { kana: "サ", romaji: "sa" }, { kana: "シ", romaji: "shi" }, { kana: "ス", romaji: "su" }, { kana: "セ", romaji: "se" }, { kana: "ソ", romaji: "so" },
+            { kana: "タ", romaji: "ta" }, { kana: "チ", romaji: "chi" }, { kana: "ツ", romaji: "tsu" }, { kana: "テ", romaji: "te" }, { kana: "ト", romaji: "to" },
+            { kana: "ナ", romaji: "na" }, { kana: "ニ", romaji: "ni" }, { kana: "ヌ", romaji: "nu" }, { kana: "ネ", romaji: "ne" }, { kana: "ノ", romaji: "no" },
+            { kana: "ハ", romaji: "ha" }, { kana: "ヒ", romaji: "hi" }, { kana: "フ", romaji: "fu" }, { kana: "ヘ", romaji: "he" }, { kana: "ホ", romaji: "ho" },
+            { kana: "マ", romaji: "ma" }, { kana: "ミ", romaji: "mi" }, { kana: "ム", romaji: "mu" }, { kana: "メ", romaji: "me" }, { kana: "モ", romaji: "mo" },
+            { kana: "ヤ", romaji: "ya" }, { kana: "ユ", romaji: "yu" }, { kana: "ヨ", romaji: "yo" },
+            { kana: "ラ", romaji: "ra" }, { kana: "リ", romaji: "ri" }, { kana: "ル", romaji: "ru" }, { kana: "レ", romaji: "re" }, { kana: "ロ", romaji: "ro" },
+            { kana: "ワ", romaji: "wa" }, { kana: "ヲ", romaji: "o" }, { kana: "ン", romaji: "n" },
+            { kana: "ガ", romaji: "ga" }, { kana: "ギ", romaji: "gi" }, { kana: "グ", romaji: "gu" }, { kana: "ゲ", romaji: "ge" }, { kana: "ゴ", romaji: "go" },
+            { kana: "ザ", romaji: "za" }, { kana: "ジ", romaji: "ji" }, { kana: "ズ", romaji: "zu" }, { kana: "ゼ", romaji: "ze" }, { kana: "ゾ", romaji: "zo" },
+            { kana: "ダ", romaji: "da" }, { kana: "ヂ", romaji: "ji" }, { kana: "ヅ", romaji: "zu" }, { kana: "デ", romaji: "de" }, { kana: "ド", romaji: "do" },
+            { kana: "バ", romaji: "ba" }, { kana: "ビ", romaji: "bi" }, { kana: "ブ", romaji: "bu" }, { kana: "ベ", romaji: "be" }, { kana: "ボ", romaji: "bo" },
+            { kana: "パ", romaji: "pa" }, { kana: "ピ", romaji: "pi" }, { kana: "プ", romaji: "pu" }, { kana: "ペ", romaji: "pe" }, { kana: "ポ", romaji: "po" },
+            { kana: "キャ", romaji: "kya" }, { kana: "キュ", romaji: "kyu" }, { kana: "キョ", romaji: "kyo" },
+            { kana: "シャ", romaji: "sha" }, { kana: "シュ", romaji: "shu" }, { kana: "ショ", romaji: "sho" },
+            { kana: "チャ", romaji: "cha" }, { kana: "チュ", romaji: "chu" }, { kana: "チョ", romaji: "cho" },
+            { kana: "ニャ", romaji: "nya" }, { kana: "ニュ", romaji: "nyu" }, { kana: "ニョ", romaji: "nyo" },
+            { kana: "ヒャ", romaji: "hya" }, { kana: "ヒュ", romaji: "hyu" }, { kana: "ヒョ", romaji: "hyo" },
+            { kana: "ミャ", romaji: "mya" }, { kana: "ミュ", romaji: "myu" }, { kana: "ミョ", romaji: "myo" },
+            { kana: "リャ", romaji: "rya" }, { kana: "リュ", romaji: "ryu" }, { kana: "リョ", romaji: "ryo" },
+            { kana: "ギャ", romaji: "gya" }, { kana: "ギュ", romaji: "gyu" }, { kana: "ギョ", romaji: "gyo" },
+            { kana: "ジャ", romaji: "ja" }, { kana: "ジュ", romaji: "ju" }, { kana: "ジョ", romaji: "jo" },
+            { kana: "ビャ", romaji: "bya" }, { kana: "ビュ", romaji: "byu" }, { kana: "ビョ", romaji: "byo" },
+            { kana: "ピャ", romaji: "pya" }, { kana: "ピュ", romaji: "pyu" }, { kana: "ピョ", romaji: "pyo" }
+        ];
+        const extendedKatakanaChars = [
+            { kana: "シェ", romaji: "she" }, { kana: "チェ", romaji: "che" },
+            { kana: "ツァ", romaji: "tsa" }, { kana: "ツェ", romaji: "tse" }, { kana: "ツォ", romaji: "tso" },
+            { kana: "ティ", romaji: "ti" }, { kana: "ディ", romaji: "di" },
+            { kana: "ファ", romaji: "fa" }, { kana: "フィ", romaji: "fi" }, { kana: "フェ", romaji: "fe" }, { kana: "フォ", romaji: "fo" },
+            { kana: "ジェ", romaji: "je" }, { kana: "デュ", romaji: "dyu" }, { kana: "イェ", romaji: "ye" },
+            { kana: "ウィ", romaji: "wi" }, { kana: "ウェ", romaji: "we" }, { kana: "ウォ", romaji: "wo" },
+            { kana: "クァ", romaji: "kwa" }, { kana: "クィ", romaji: "kwi" }, { kana: "クェ", romaji: "kwe" }, { kana: "クォ", romaji: "kwo" },
+            { kana: "ツィ", romaji: "tsi" },
+            { kana: "トゥ", romaji: "tu" }, { kana: "ドゥ", romaji: "du" },
+            { kana: "ヴァ", romaji: "va" }, { kana: "ヴィ", romaji: "vi" }, { kana: "ヴ", romaji: "vu" }, { kana: "ヴェ", romaji: "ve" }, { kana: "ヴォ", romaji: "vo" },
+            { kana: "テュ", romaji: "tyu" }, { kana: "フュ", romaji: "fyu" }, { kana: "ヴュ", romaji: "vyu" }
+        ];
+
+        // --- DOM Elements ---
+        const settingsScreen = document.getElementById('settingsScreen');
+        const learningScreen = document.getElementById('learningScreen');
+        const useHiraganaCheckbox = document.getElementById('useHiragana');
+        const useKatakanaCheckbox = document.getElementById('useKatakana');
+        const useExtendedKatakanaCheckbox = document.getElementById('useExtendedKatakana');
+        const noSetSelectedError = document.getElementById('noSetSelectedError');
+        const startButton = document.getElementById('startButton');
+        
+        const progressBar = document.getElementById('progressBar');
+        const progressLabel = document.getElementById('progressLabel');
+        const characterDisplay = document.getElementById('characterDisplay');
+        const romajiInput = document.getElementById('romajiInput');
+        const submitGuessButton = document.getElementById('submitGuessButton');
+        const showAnswerButton = document.getElementById('showAnswerButton');
+        const feedbackArea = document.getElementById('feedbackArea');
+        
+        const queueCountDisplay = document.getElementById('queueCountDisplay');
+        const attemptCountDisplay = document.getElementById('attemptCountDisplay');
+        
+        const nextCharacterButton = document.getElementById('nextCharacterButton');
+        const resetSessionButton = document.getElementById('resetSessionButton');
+        const backToSettingsButton = document.getElementById('backToSettingsButton');
+        const completionMessage = document.getElementById('completionMessage');
+        const finalScore = document.getElementById('finalScore');
+        const restartButton = document.getElementById('restartButton');
+
+        // --- App State ---
+        let selectedInitialChars = []; 
+        let practiceQueue = []; 
+        let currentKanaObject = null; 
+        let timesCorrectNeeded = {}; // Stores kana characters (keys) that need more correct answers (values).
+        let score = { mastered: 0, attempts: 0 };
+        let totalInitialChars = 0; 
+        let characterAttemptedThisTurn = false;
+
+        // --- Functions ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function initializeSessionState() {
+            totalInitialChars = selectedInitialChars.length;
+            practiceQueue = shuffleArray([...selectedInitialChars]); 
+            timesCorrectNeeded = {}; // Reset difficult characters tracker
+            score = { mastered: 0, attempts: 0 }; // Reset score
+            
+            completionMessage.classList.add('hidden'); // Hide completion message
+            showMainLearningUI(); // Ensure learning UI is visible
+            loadNextCharacterFromQueue(); // Load the first character
+        }
+
+        function startLearningSession() {
+            // Gather selected character sets
+            const includeHiragana = useHiraganaCheckbox.checked;
+            const includeKatakana = useKatakanaCheckbox.checked;
+            const includeExtendedKatakana = useExtendedKatakanaCheckbox.checked;
+
+            selectedInitialChars = []; // Clear previous selections
+            if (includeHiragana) selectedInitialChars.push(...hiraganaChars);
+            if (includeKatakana) selectedInitialChars.push(...katakanaChars);
+            if (includeExtendedKatakana) selectedInitialChars.push(...extendedKatakanaChars);
+
+            if (selectedInitialChars.length === 0) {
+                noSetSelectedError.classList.remove('hidden'); // Show error if no set is selected
+                return;
+            }
+            noSetSelectedError.classList.add('hidden'); // Hide error
+            
+            settingsScreen.classList.add('hidden'); // Hide settings screen
+            learningScreen.classList.remove('hidden'); // Show learning screen
+            initializeSessionState(); // Setup the session
+        }
+        
+        function resetCurrentSession() {
+            if (selectedInitialChars.length === 0) {
+                goBackToSettings(); // If no initial set (edge case), go to settings
+                return;
+            }
+            initializeSessionState(); // Re-initialize with the same selectedInitialChars
+        }
+
+        function loadNextCharacterFromQueue() {
+            if (practiceQueue.length === 0) { // If the main queue is empty
+                // Check if all selected characters are truly mastered
+                const unmasteredChars = selectedInitialChars.filter(char => timesCorrectNeeded.hasOwnProperty(char.kana));
+                if (unmasteredChars.length > 0) {
+                    // If there are still unmastered (difficult) characters, requeue them
+                    console.warn("Main queue empty, but unmastered characters remain. Requeuing them.");
+                    practiceQueue = shuffleArray([...unmasteredChars]);
+                } else if (totalInitialChars > 0 && score.mastered === totalInitialChars) {
+                    // All characters are mastered
+                    displayCompletion();
+                    return;
+                } else if (totalInitialChars === 0) {
+                    // No characters were selected initially
+                    goBackToSettings();
+                    return;
+                }
+                // If queue is still empty after checks, it might mean completion or an issue
+                if (practiceQueue.length === 0) {
+                     if (totalInitialChars > 0 && score.mastered === totalInitialChars) displayCompletion();
+                     else {
+                        console.error("Queue empty, unable to load next character. State:", {score, totalInitialChars, timesCorrectNeededCount: Object.keys(timesCorrectNeeded).length});
+                        goBackToSettings(); // Fallback
+                     }
+                    return;
+                }
+            }
+            
+            currentKanaObject = practiceQueue.shift(); // Get the next character
+
+            // Update UI for the new character
+            characterDisplay.textContent = currentKanaObject.kana;
+            characterDisplay.classList.remove('kana-enter');
+            void characterDisplay.offsetWidth; 
+            characterDisplay.classList.add('kana-enter');
+
+            romajiInput.value = '';
+            romajiInput.disabled = false;
+            feedbackArea.textContent = '';
+            feedbackArea.className = 'text-center text-base sm:text-lg min-h-[2.5em] mb-4 font-semibold'; // Reset feedback style
+            submitGuessButton.disabled = false;
+            showAnswerButton.disabled = false;
+            nextCharacterButton.disabled = true;
+            characterAttemptedThisTurn = false;
+            
+            updateStatsDisplay(); // Update scores, progress bar, etc.
+            romajiInput.focus(); // Focus on input field
+        }
+        
+        function updateStatsDisplay() {
+            // Recalculate mastered count directly from source of truth
+            score.mastered = selectedInitialChars.filter(char => !timesCorrectNeeded.hasOwnProperty(char.kana)).length;
+
+            const masteryPercentage = totalInitialChars > 0 ? (score.mastered / totalInitialChars) * 100 : 0;
+            progressBar.style.width = `${masteryPercentage}%`;
+            progressLabel.textContent = `Mastered: ${score.mastered} / ${totalInitialChars}`;
+            
+            // Queue count includes the current character if one is loaded, plus the rest of the practiceQueue
+            const currentQueueSize = practiceQueue.length + (currentKanaObject && !nextCharacterButton.disabled ? 0 : (currentKanaObject ? 1: 0));
+             // A more direct way for queue count: what's literally in practiceQueue + the one being displayed (if any)
+            let itemsEffectivelyInQueue = practiceQueue.length;
+            if (currentKanaObject && !nextCharacterButton.disabled) { // If a char is displayed and we are waiting for next button
+                // This means the current char is "done" for this turn, not really "in queue" in the same way.
+                // However, if nextCharacterButton IS disabled, it means currentKanaObject is the active one.
+            } else if (currentKanaObject) {
+                 itemsEffectivelyInQueue++;
+            }
+            queueCountDisplay.textContent = `In Queue: ${itemsEffectivelyInQueue}`;
+            attemptCountDisplay.textContent = `Attempts: ${score.attempts}`;
+        }
+
+        function processAnswer(isCorrect) {
+            if (!currentKanaObject) return; // Should not happen
+            const kanaKey = currentKanaObject.kana;
+
+            if (isCorrect) {
+                feedbackArea.textContent = 'Correct! 🎉';
+                feedbackArea.classList.add('feedback-correct');
+
+                if (timesCorrectNeeded.hasOwnProperty(kanaKey)) { 
+                    timesCorrectNeeded[kanaKey]--; // Decrement needed correct answers
+                    if (timesCorrectNeeded[kanaKey] <= 0) {
+                        delete timesCorrectNeeded[kanaKey]; // Fully mastered this difficult char
+                    }
+                }
+                // If it was never in timesCorrectNeeded, it's mastered on this try (for this cycle)
+            } else { // Incorrect or Show Answer
+                feedbackArea.textContent = `Incorrect. The correct answer is: ${currentKanaObject.romaji.toLowerCase()}`;
+                feedbackArea.classList.add('feedback-incorrect');
+                timesCorrectNeeded[kanaKey] = 2; // Mark as difficult, needs 2 correct answers
+                practiceQueue.push(currentKanaObject); // Add back to the end of the queue
+                shuffleArray(practiceQueue); // Re-shuffle to vary its reappearance
+            }
+            
+            // Always recalculate score.mastered after any change to timesCorrectNeeded
+            // score.mastered = selectedInitialChars.filter(char => !timesCorrectNeeded.hasOwnProperty(char.kana)).length;
+
+            // UI updates after processing answer
+            romajiInput.disabled = true;
+            submitGuessButton.disabled = true;
+            showAnswerButton.disabled = true;
+            nextCharacterButton.disabled = false;
+            nextCharacterButton.focus();
+            updateStatsDisplay();
+        }
+
+        function handleGuess() {
+            if (characterAttemptedThisTurn || !currentKanaObject) return;
+            const guess = romajiInput.value.trim().toLowerCase();
+            
+            if (!guess) {
+                feedbackArea.textContent = "Please enter a Romaji.";
+                feedbackArea.className = 'text-center text-base sm:text-lg min-h-[2.5em] mb-4 font-semibold text-yellow-600';
+                return;
+            }
+
+            characterAttemptedThisTurn = true;
+            score.attempts++;
+            processAnswer(guess === currentKanaObject.romaji.toLowerCase());
+        }
+
+        function handleShowAnswer() {
+            if (characterAttemptedThisTurn || !currentKanaObject) return;
+            
+            characterAttemptedThisTurn = true;
+            score.attempts++;
+            // Overwrite feedback specifically for "Show Answer"
+            feedbackArea.textContent = `The answer is: ${currentKanaObject.romaji.toLowerCase()}`;
+            feedbackArea.className = 'text-center text-base sm:text-lg min-h-[2.5em] mb-4 font-semibold text-blue-600'; // Neutral/info color
+            
+            processAnswer(false); // Treat as incorrect for learning purposes (it gets re-queued)
+        }
+        
+        function showMainLearningUI() {
+            characterDisplay.classList.remove('hidden');
+            learningScreen.querySelector('#romajiInput').parentElement.classList.remove('hidden');
+            learningScreen.querySelector('#submitGuessButton').parentElement.classList.remove('hidden');
+            learningScreen.querySelector('#queueCountDisplay').parentElement.classList.remove('hidden');
+            learningScreen.querySelector('.progress-bar-container').classList.remove('hidden');
+            progressLabel.classList.remove('hidden');
+            nextCharacterButton.classList.remove('hidden');
+            resetSessionButton.classList.remove('hidden');
+            completionMessage.classList.add('hidden');
+        }
+
+        function hideMainLearningUI() {
+            characterDisplay.classList.add('hidden');
+            learningScreen.querySelector('#romajiInput').parentElement.classList.add('hidden');
+            learningScreen.querySelector('#submitGuessButton').parentElement.classList.add('hidden');
+            learningScreen.querySelector('#queueCountDisplay').parentElement.classList.add('hidden');
+            learningScreen.querySelector('.progress-bar-container').classList.add('hidden');
+            progressLabel.classList.add('hidden');
+            nextCharacterButton.classList.add('hidden');
+            resetSessionButton.classList.add('hidden');
+        }
+
+        function displayCompletion() {
+            hideMainLearningUI();
+            completionMessage.classList.remove('hidden');
+            // Ensure final mastered count is accurate before displaying
+            score.mastered = selectedInitialChars.filter(char => !timesCorrectNeeded.hasOwnProperty(char.kana)).length;
+            finalScore.textContent = `Mastered: ${score.mastered} / ${totalInitialChars} in ${score.attempts} attempts.`;
+        }
+        
+        function goBackToSettings() {
+            learningScreen.classList.add('hidden');
+            completionMessage.classList.add('hidden');
+            settingsScreen.classList.remove('hidden');
+            noSetSelectedError.classList.add('hidden');
+        }
+
+        // --- Event Listeners ---
+        startButton.addEventListener('click', startLearningSession);
+        resetSessionButton.addEventListener('click', resetCurrentSession);
+        submitGuessButton.addEventListener('click', handleGuess);
+        romajiInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter' && !submitGuessButton.disabled) {
+                handleGuess();
+            }
+        });
+        showAnswerButton.addEventListener('click', handleShowAnswer);
+        nextCharacterButton.addEventListener('click', () => {
+            currentKanaObject = null; // Clear current object before loading next
+            loadNextCharacterFromQueue();
+        });
+        backToSettingsButton.addEventListener('click', goBackToSettings);
+        restartButton.addEventListener('click', () => {
+            goBackToSettings(); 
+        });
+
+        // Initial focus on settings screen
+        if (useHiraganaCheckbox) useHiraganaCheckbox.focus();
+
+    </script>
+</body>
+</html>
