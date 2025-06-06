@@ -46,7 +46,7 @@
         /* These "media queries" make the font responsive for different screen sizes */
         @media (min-width: 640px) { /* On small screens (sm) and up */
             .kana-display {
-                font-size: 4.5rem;
+                font-size: 2.5rem;
                 margin-top: 1.5rem;
                 margin-bottom: 1.5rem;
             }
@@ -346,7 +346,7 @@
             characterDisplay.classList.add('kana-enter');
 
             romajiInput.value = '';
-            romajiInput.disabled = false;
+            romajiInput.readOnly = false;
             feedbackArea.textContent = '';
             feedbackArea.className = 'text-center text-base sm:text-lg min-h-[2.5em] mb-4 font-semibold'; // Reset feedback style
             submitGuessButton.disabled = false;
@@ -407,11 +407,11 @@
             // score.mastered = selectedInitialChars.filter(char => !timesCorrectNeeded.hasOwnProperty(char.kana)).length;
 
             // UI updates after processing answer
-            romajiInput.disabled = true;
+            romajiInput.readOnly = true; // <-- CHANGE: Makes it un-editable but keeps it focusable
             submitGuessButton.disabled = true;
             showAnswerButton.disabled = true;
             nextCharacterButton.disabled = false;
-            nextCharacterButton.focus();
+            // We REMOVED nextCharacterButton.focus(); to keep the keyboard active
             updateStatsDisplay();
         }
 
@@ -485,10 +485,21 @@
         resetSessionButton.addEventListener('click', resetCurrentSession);
         submitGuessButton.addEventListener('click', handleGuess);
         romajiInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter' && !submitGuessButton.disabled) {
-                handleGuess();
+            if (event.key === 'Enter') {
+                // Stop the default browser action for the Enter key
+                event.preventDefault(); 
+
+                // Check which action to perform based on which button is enabled
+                if (!submitGuessButton.disabled) {
+                    // If we are waiting for a guess, handle the guess.
+                    handleGuess();
+                } else if (!nextCharacterButton.disabled) {
+                    // If we are waiting to move on, load the next character.
+                    currentKanaObject = null; // This mimics the button click
+                    loadNextCharacterFromQueue();
+                }
             }
-        });
+        });    
         showAnswerButton.addEventListener('click', handleShowAnswer);
         nextCharacterButton.addEventListener('click', () => {
             currentKanaObject = null; // Clear current object before loading next
