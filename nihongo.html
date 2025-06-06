@@ -108,6 +108,24 @@
                         <input type="checkbox" id="useVocabulary" class="form-checkbox h-5 w-5 text-blue-600 rounded focusable">
                         <span class="ml-3 text-gray-700 text-base sm:text-lg jp-font">Vokabeln (Lektion 1-12)</span>
                     </label>
+                    <div id="vocabLessonSelectContainer" class="ml-8 mt-2 hidden">
+                        <label for="vocabLessonSelect" class="text-gray-700 text-sm">Lektion wählen:</label>
+                        <select id="vocabLessonSelect" class="ml-2 border rounded px-2 py-1 text-sm">
+                            <option value="all">Alle Lektionen</option>
+                            <option value="1">Lektion 1</option>
+                            <option value="2">Lektion 2</option>
+                            <option value="3">Lektion 3</option>
+                            <option value="4">Lektion 4</option>
+                            <option value="5">Lektion 5</option>
+                            <option value="6">Lektion 6</option>
+                            <option value="7">Lektion 7</option>
+                            <option value="8">Lektion 8</option>
+                            <option value="9">Lektion 9</option>
+                            <option value="10">Lektion 10</option>
+                            <option value="11">Lektion 11</option>
+                            <option value="12">Lektion 12</option>
+                        </select>
+                    </div>
                 </div>
                  <p id="noSetSelectedError" class="text-red-500 text-sm mt-2 hidden">Please select at least one character set.</p>
                 <button id="startButton" class="w-full btn btn-primary text-base sm:text-lg py-2 sm:py-3">Start Learning</button>
@@ -729,6 +747,22 @@
             { kana: "おかえりなさい", romaji: "okaerinasai", german: "Willkommen zurück." }
         ];
 
+        // --- Vocabulary split by lesson ---
+        const vocabularyLessons = {
+            1: vocabularyL1_12.slice(0, 31),   // adjust indices for each lesson
+            2: vocabularyL1_12.slice(31, 61),
+            3: vocabularyL1_12.slice(61, 91),
+            4: vocabularyL1_12.slice(91, 141),
+            5: vocabularyL1_12.slice(141, 201),
+            6: vocabularyL1_12.slice(201, 251),
+            7: vocabularyL1_12.slice(251, 291),
+            8: vocabularyL1_12.slice(291, 332),
+            9: vocabularyL1_12.slice(332, 372),
+            10: vocabularyL1_12.slice(372, 412),
+            11: vocabularyL1_12.slice(412, 462),
+            12: vocabularyL1_12.slice(462)
+        };
+
         // --- DOM Elements ---
         const settingsScreen = document.getElementById('settingsScreen');
         const learningScreen = document.getElementById('learningScreen');
@@ -756,6 +790,8 @@
         const completionMessage = document.getElementById('completionMessage');
         const finalScore = document.getElementById('finalScore');
         const restartButton = document.getElementById('restartButton');
+        const vocabLessonSelectContainer = document.getElementById('vocabLessonSelectContainer');
+        const vocabLessonSelect = document.getElementById('vocabLessonSelect');
 
         // --- App State ---
         let selectedInitialChars = []; 
@@ -791,12 +827,19 @@
             const includeKatakana = useKatakanaCheckbox.checked;
             const includeExtendedKatakana = useExtendedKatakanaCheckbox.checked;
             const includeVocabulary = useVocabularyCheckbox.checked;
+            const selectedLesson = vocabLessonSelect.value;
 
             selectedInitialChars = [];
             if (includeHiragana) selectedInitialChars.push(...hiraganaChars);
             if (includeKatakana) selectedInitialChars.push(...katakanaChars);
             if (includeExtendedKatakana) selectedInitialChars.push(...extendedKatakanaChars);
-            if (includeVocabulary) selectedInitialChars.push(...vocabularyL1_12);
+            if (includeVocabulary) {
+                if (selectedLesson === "all") {
+                    selectedInitialChars.push(...vocabularyL1_12);
+                } else {
+                    selectedInitialChars.push(...(vocabularyLessons[selectedLesson] || []));
+                }
+            }
 
             if (selectedInitialChars.length === 0) {
                 noSetSelectedError.classList.remove('hidden');
@@ -1000,6 +1043,11 @@
         backToSettingsButton.addEventListener('click', goBackToSettings);
         restartButton.addEventListener('click', () => {
             goBackToSettings(); 
+        });
+
+        // Show/hide lesson select when vocab is checked
+        useVocabularyCheckbox.addEventListener('change', () => {
+            vocabLessonSelectContainer.classList.toggle('hidden', !useVocabularyCheckbox.checked);
         });
 
         if (useHiraganaCheckbox) useHiraganaCheckbox.focus();
