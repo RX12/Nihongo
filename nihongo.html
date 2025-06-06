@@ -877,7 +877,7 @@
         function getAnswerText(kanaObject) {
             const romaji = kanaObject.romaji.toLowerCase();
             if (kanaObject.german) {
-                return `${romaji} (${kanaObject.german})`;
+                return `${romaji} <span class="text-blue-600">(${kanaObject.german})</span>`;
             }
             return romaji;
         }
@@ -887,7 +887,7 @@
             const kanaKey = currentKanaObject.kana;
 
             if (isCorrect) {
-                feedbackArea.textContent = 'Correct! 🎉';
+                feedbackArea.innerHTML = `Correct! 🎉 - : <span class="text-blue-600">${currentKanaObject.german}</span>`;
                 feedbackArea.classList.add('feedback-correct');
 
                 if (timesCorrectNeeded.hasOwnProperty(kanaKey)) { 
@@ -897,7 +897,7 @@
                     }
                 }
             } else {
-                feedbackArea.textContent = `Incorrect. The correct answer is: ${getAnswerText(currentKanaObject)}`;
+                feedbackArea.innerHTML = `X. Answer: ${getAnswerText(currentKanaObject)}`;
                 feedbackArea.classList.add('feedback-incorrect');
                 timesCorrectNeeded[kanaKey] = 2;
                 practiceQueue.push(currentKanaObject);
