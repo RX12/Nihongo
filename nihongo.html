@@ -77,9 +77,17 @@
         .progress-bar {
             @apply bg-blue-600 h-4 rounded-full transition-all duration-300 ease-in-out text-xs flex items-center justify-center text-white;
         }
+        /* --- Add this new code for a better mobile experience --- */
+        @media (max-width: 767px) {
+          #app-container {
+            position: -webkit-sticky; /* For Safari compatibility */
+            position: sticky;
+            top: 1rem; /* Adjust this value to control the space from the top */
+          }
+        }
     </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4 antialiased">
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4 antialiased">
 
     <div id="app-container" class="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-lg">
 
