@@ -35,9 +35,27 @@
         .btn-green {
             @apply bg-green-500 text-white hover:bg-green-600 active:bg-green-700 shadow-md;
         }
+        /* ADD THIS NEW CODE IN ITS PLACE */
         .kana-display {
-            /* Responsive font size for the Kana character */
-            @apply text-[10rem] sm:text-[12rem] md:text-[14rem] font-bold my-4 sm:my-6;
+            font-weight: 500; /* This is font-bold */
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            font-size: 1rem; /* base font size to make the change obvious */
+        }
+
+        /* These "media queries" make the font responsive for different screen sizes */
+        @media (min-width: 640px) { /* On small screens (sm) and up */
+            .kana-display {
+                font-size: 2.5rem;
+                margin-top: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        @media (min-width: 768px) { /* On medium screens (md) and up */
+            .kana-display {
+                font-size: 3.5rem;
+            }
         }
         .feedback-correct {
             @apply text-green-600;
