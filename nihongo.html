@@ -31,15 +31,13 @@
 
     <div id="app-container" class="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-lg">
 
-        <!-- Settings Screen -->
         <div id="settingsScreen">
             <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6 sm:mb-8 jp-font">日本語学習 <span class="text-sm text-gray-500 block">Japanese Learner</span></h1>
             
-            <!-- NEU: Bereich zum Laden von Vokabeln -->
             <div class="mb-6 p-4 border-l-4 border-blue-500 bg-blue-50 rounded-lg">
-                <p class="text-sm text-gray-700 mb-2">Laden Sie Ihre eigene `vocab.js` Vokabeldatei:</p>
+                <p class="text-sm text-gray-700 mb-2">Laden Sie Ihre eigene `vocab.json` Vokabeldatei:</p>
                 <button id="loadVocabButton" class="w-full btn btn-secondary">Vokabeldatei auswählen...</button>
-                <input type="file" id="vocabFileInput" class="hidden" accept=".js">
+                <input type="file" id="vocabFileInput" class="hidden" accept=".json">
                 <p id="loadStatus" class="text-xs text-center text-gray-500 mt-2">Noch keine Datei geladen.</p>
             </div>
 
@@ -60,14 +58,12 @@
                     </label>
                     <hr/>
                     <label class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
-                        <input type="checkbox" id="useVocabulary" class="form-checkbox h-5 w-5 text-blue-600 rounded focusable" disabled> <!-- Startet deaktiviert -->
+                        <input type="checkbox" id="useVocabulary" class="form-checkbox h-5 w-5 text-blue-600 rounded focusable" disabled>
                         <span id="vocabLabel" class="ml-3 text-gray-500 text-base sm:text-lg jp-font">Vokabeln (geladen)</span>
                     </label>
                     <div id="vocabLessonSelectContainer" class="ml-8 mt-2 hidden">
                         <label for="vocabLessonSelect" class="text-gray-700 text-sm">Lektion wählen:</label>
-                        <select id="vocabLessonSelect" class="ml-2 border rounded px-2 py-1 text-sm">
-                            <!-- Optionen werden dynamisch geladen -->
-                        </select>
+                        <select id="vocabLessonSelect" class="ml-2 border rounded px-2 py-1 text-sm"></select>
                     </div>
                 </div>
                  <p id="noSetSelectedError" class="text-red-500 text-sm mt-2 hidden">Please select at least one character set.</p>
@@ -75,9 +71,7 @@
             </div>
         </div>
 
-        <!-- Learning Screen (Hidden by default) -->
         <div id="learningScreen" class="hidden">
-            <!-- (Inhalt des Learning Screens bleibt unverändert) -->
             <div class="flex justify-between items-center mb-4"><h2 class="text-xl sm:text-2xl font-semibold text-gray-700 jp-font">Practice Mode</h2><button id="backToSettingsButton" class="btn btn-secondary text-xs sm:text-sm">&larr; Change Sets</button></div>
             <div class="mb-2 text-xs sm:text-sm text-gray-600 text-center" id="progressLabel">Mastered: 0 / 0</div><div class="progress-bar-container"><div id="progressBar" class="progress-bar" style="width: 0%;"></div></div>
             <div id="characterDisplay" class="kana-display text-center text-gray-800 kana-char"></div>
@@ -92,59 +86,42 @@
 
     <script>
         // --- Statische Kana-Daten ---
-        const hiraganaChars = [
-            { kana: "あ", romaji: "a" }, { kana: "い", romaji: "i" }, { kana: "う", romaji: "u" }, { kana: "え", romaji: "e" }, { kana: "お", romaji: "o" },
-            { kana: "か", romaji: "ka" }, { kana: "き", romaji: "ki" }, { kana: "く", romaji: "ku" }, { kana: "け", romaji: "ke" }, { kana: "こ", romaji: "ko" },
-            { kana: "さ", romaji: "sa" }, { kana: "し", romaji: "shi" }, { kana: "す", romaji: "su" }, { kana: "せ", romaji: "se" }, { kana: "そ", romaji: "so" },
-            { kana: "た", romaji: "ta" }, { kana: "ち", romaji: "chi" }, { kana: "つ", romaji: "tsu" }, { kana: "て", romaji: "te" }, { kana: "と", romaji: "to" },
-            { kana: "な", romaji: "na" }, { kana: "に", romaji: "ni" }, { kana: "ぬ", romaji: "nu" }, { kana: "ね", romaji: "ne" }, { kana: "の", romaji: "no" },
-            { kana: "は", romaji: "ha" }, { kana: "ひ", romaji: "hi" }, { kana: "ふ", romaji: "fu" }, { kana: "へ", romaji: "he" }, { kana: "ほ", romaji: "ho" },
-            { kana: "ま", romaji: "ma" }, { kana: "み", romaji: "mi" }, { kana: "む", romaji: "mu" }, { kana: "め", romaji: "me" }, { kana: "も", romaji: "mo" },
-            { kana: "や", romaji: "ya" }, { kana: "ゆ", romaji: "yu" }, { kana: "よ", romaji: "yo" },
-            { kana: "ら", romaji: "ra" }, { kana: "り", romaji: "ri" }, { kana: "る", romaji: "ru" }, { kana: "れ", romaji: "re" }, { kana: "ろ", romaji: "ro" },
-            { kana: "わ", romaji: "wa" }, { kana: "を", romaji: "o" }, { kana: "ん", romaji: "n" },
-            { kana: "が", romaji: "ga" }, { kana: "ぎ", romaji: "gi" }, { kana: "ぐ", romaji: "gu" }, { kana: "げ", romaji: "ge" }, { kana: "ご", romaji: "go" },
-            { kana: "ざ", romaji: "za" }, { kana: "じ", romaji: "ji" }, { kana: "ず", romaji: "zu" }, { kana: "ぜ", romaji: "ze" }, { kana: "ぞ", romaji: "zo" },
-            { kana: "だ", romaji: "da" }, { kana: "ぢ", romaji: "ji" }, { kana: "づ", romaji: "zu" }, { kana: "で", romaji: "de" }, { kana: "ど", romaji: "do" },
-            { kana: "ば", romaji: "ba" }, { kana: "び", romaji: "bi" }, { kana: "ぶ", romaji: "bu" }, { kana: "べ", romaji: "be" }, { kana: "ぼ", romaji: "bo" },
-            { kana: "ぱ", romaji: "pa" }, { kana: "ぴ", romaji: "pi" }, { kana: "ぷ", romaji: "pu" }, { kana: "ぺ", romaji: "pe" }, { kana: "ぽ", romaji: "po" },
-            { kana: "きゃ", romaji: "kya" }, { kana: "きゅ", romaji: "kyu" }, { kana: "きょ", romaji: "kyo" },
-            { kana: "しゃ", romaji: "sha" }, { kana: "しゅ", romaji: "shu" }, { kana: "しょ", romaji: "sho" },
-            { kana: "ちゃ", romaji: "cha" }, { kana: "ちゅ", romaji: "chu" }, { kana: "ちょ", romaji: "cho" },
-            { kana: "にゃ", romaji: "nya" }, { kana: "にゅ", romaji: "nyu" }, { kana: "にょ", romaji: "nyo" },
-            { kana: "ひゃ", romaji: "hya" }, { kana: "ひゅ", romaji: "hyu" }, { kana: "ひょ", romaji: "hyo" },
-            { kana: "みゃ", romaji: "mya" }, { kana: "みゅ", romaji: "myu" }, { kana: "みょ", romaji: "myo" },
-            { kana: "りゃ", romaji: "rya" }, { kana: "りゅ", romaji: "ryu" }, { kana: "りょ", romaji: "ryo" },
-            { kana: "ぎゃ", romaji: "gya" }, { kana: "ぎゅ", romaji: "gyu" }, { kana: "ぎょ", romaji: "gyo" },
-            { kana: "じゃ", romaji: "ja" }, { kana: "じゅ", romaji: "ju" }, { kana: "じょ", romaji: "jo" },
-            { kana: "ぢゃ", romaji: "ja" }, { kana: "ぢゅ", romaji: "ju" }, { kana: "ぢょ", romaji: "jo" },
-            { kana: "びゃ", romaji: "bya" }, { kana: "びゅ", romaji: "byu" }, { kana: "びょ", romaji: "byo" },
-            { kana: "ぴゃ", romaji: "pya" }, { kana: "ぴゅ", romaji: "pyu" }, { kana: "ぴょ", romaji: "pyo" }
-        ];
-        const katakanaChars = [
-            { kana: "ア", romaji: "a" }, { kana: "イ", romaji: "i" }, { kana: "ウ", romaji: "u" }, { kana: "エ", romaji: "e" }, { kana: "オ", romaji: "o" }, { kana: "カ", romaji: "ka" }, { kana: "キ", romaji: "ki" }, { kana: "ク", romaji: "ku" }, { kana: "ケ", romaji: "ke" }, { kana: "コ", romaji: "ko" }, { kana: "サ", romaji: "sa" }, { kana: "シ", romaji: "shi" }, { kana: "ス", romaji: "su" }, { kana: "セ", romaji: "se" }, { kana: "ソ", romaji: "so" }, { kana: "タ", romaji: "ta" }, { kana: "チ", romaji: "chi" }, { kana: "ツ", romaji: "tsu" }, { kana: "テ", romaji: "te" }, { kana: "ト", romaji: "to" }, { kana: "ナ", romaji: "na" }, { kana: "ニ", romaji: "ni" }, { kana: "ヌ", romaji: "nu" }, { kana: "ネ", romaji: "ne" }, { kana: "ノ", romaji: "no" }, { kana: "ハ", romaji: "ha" }, { kana: "ヒ", romaji: "hi" }, { kana: "フ", romaji: "fu" }, { kana: "ヘ", romaji: "he" }, { kana: "ホ", romaji: "ho" }, { kana: "マ", romaji: "ma" }, { kana: "ミ", romaji: "mi" }, { kana: "ム", romaji: "mu" }, { kana: "メ", romaji: "me" }, { kana: "モ", romaji: "mo" }, { kana: "ヤ", romaji: "ya" }, { kana: "ユ", romaji: "yu" }, { kana: "ヨ", romaji: "yo" }, { kana: "ラ", romaji: "ra" }, { kana: "リ", romaji: "ri" }, { kana: "ル", romaji: "ru" }, { kana: "レ", romaji: "re" }, { kana: "ロ", romaji: "ro" }, { kana: "ワ", romaji: "wa" }, { kana: "ヲ", romaji: "o" }, { kana: "ン", romaji: "n" }, { kana: "ガ", romaji: "ga" }, { kana: "ギ", romaji: "gi" }, { kana: "グ", romaji: "gu" }, { kana: "ゲ", romaji: "ge" }, { kana: "ゴ", romaji: "go" }, { kana: "ザ", romaji: "za" }, { kana: "ジ", romaji: "ji" }, { kana: "ズ", romaji: "zu" }, { kana: "ゼ", romaji: "ze" }, { kana: "ゾ", romaji: "zo" }, { kana: "ダ", romaji: "da" }, { kana: "ヂ", romaji: "ji" }, { kana: "ヅ", romaji: "zu" }, { kana: "デ", romaji: "de" }, { kana: "ド", romaji: "do" }, { kana: "バ", romaji: "ba" }, { kana: "ビ", romaji: "bi" }, { kana: "ブ", romaji: "bu" }, { kana: "ベ", romaji: "be" }, { kana: "ボ", romaji: "bo" }, { kana: "パ", romaji: "pa" }, { kana: "ピ", romaji: "pi" }, { kana: "プ", romaji: "pu" }, { kana: "ペ", romaji: "pe" }, { kana: "ポ", romaji: "po" }, { kana: "キャ", romaji: "kya" }, { kana: "キュ", romaji: "kyu" }, { kana: "キョ", romaji: "kyo" }, { kana: "シャ", romaji: "sha" }, { kana: "シュ", romaji: "shu" }, { kana: "ショ", romaji: "sho" }, { kana: "チャ", romaji: "cha" }, { kana: "チュ", romaji: "chu" }, { kana: "チョ", romaji: "cho" }, { kana: "ニャ", romaji: "nya" }, { kana: "ニュ", romaji: "nyu" }, { kana: "ニョ", romaji: "nyo" }, { kana: "ヒャ", romaji: "hya" }, { kana: "ヒュ", romaji: "hyu" }, { kana: "ヒョ", romaji: "hyo" }, { kana: "ミャ", romaji: "mya" }, { kana: "ミュ", romaji: "myu" }, { kana: "ミョ", romaji: "myo" }, { kana: "リャ", romaji: "rya" }, { kana: "リュ", romaji: "ryu" }, { kana: "リョ", romaji: "ryo" }, { kana: "ギャ", romaji: "gya" }, { kana: "ギュ", romaji: "gyu" }, { kana: "ギョ", romaji: "gyo" }, { kana: "ジャ", romaji: "ja" }, { kana: "ジュ", romaji: "ju" }, { kana: "ジョ", romaji: "jo" }, { kana: "ビャ", romaji: "bya" }, { kana: "ビュ", romaji: "byu" }, { kana: "ビョ", romaji: "byo" }, { kana: "ピャ", romaji: "pya" }, { kana: "ピュ", romaji: "pyu" }, { kana: "ピョ", romaji: "pyo" }
-        ];
-        const extendedKatakanaChars = [
-            { kana: "シェ", romaji: "she" }, { kana: "チェ", romaji: "che" }, { kana: "ツァ", romaji: "tsa" }, { kana: "ツェ", romaji: "tse" }, { kana: "ツォ", romaji: "tso" }, { kana: "ティ", romaji: "ti" }, { kana: "ディ", romaji: "di" }, { kana: "ファ", romaji: "fa" }, { kana: "フィ", romaji: "fi" }, { kana: "フェ", romaji: "fe" }, { kana: "フォ", romaji: "fo" }, { kana: "ジェ", romaji: "je" }, { kana: "デュ", romaji: "dyu" }, { kana: "イェ", romaji: "ye" }, { kana: "ウィ", romaji: "wi" }, { kana: "ウェ", romaji: "we" }, { kana: "ウォ", romaji: "wo" }, { kana: "クァ", romaji: "kwa" }, { kana: "クィ", romaji: "kwi" }, { kana: "クェ", romaji: "kwe" }, { kana: "クォ", romaji: "kwo" }, { kana: "ツィ", romaji: "tsi" }, { kana: "トゥ", romaji: "tu" }, { kana: "ドゥ", romaji: "du" }, { kana: "ヴァ", romaji: "va" }, { kana: "ヴィ", romaji: "vi" }, { kana: "ヴ", romaji: "vu" }, { kana: "ヴェ", romaji: "ve" }, { kana: "ヴォ", romaji: "vo" }, { kana: "テュ", romaji: "tyu" }, { kana: "フュ", romaji: "fyu" }, { kana: "ヴュ", romaji: "vyu" }
-        ];
-
-        // --- Dynamisch geladene Vokabeln ---
+        const hiraganaChars = [ { kana: "あ", romaji: "a" }, { kana: "い", romaji: "i" }, { kana: "う", romaji: "u" }, { kana: "え", romaji: "e" }, { kana: "お", romaji: "o" }, { kana: "か", romaji: "ka" }, { kana: "き", romaji: "ki" }, { kana: "く", romaji: "ku" }, { kana: "け", romaji: "ke" }, { kana: "こ", romaji: "ko" }, { kana: "さ", romaji: "sa" }, { kana: "し", romaji: "shi" }, { kana: "す", romaji: "su" }, { kana: "せ", romaji: "se" }, { kana: "そ", romaji: "so" }, { kana: "た", romaji: "ta" }, { kana: "ち", romaji: "chi" }, { kana: "つ", romaji: "tsu" }, { kana: "て", romaji: "te" }, { kana: "と", romaji: "to" }, { kana: "な", romaji: "na" }, { kana: "に", romaji: "ni" }, { kana: "ぬ", romaji: "nu" }, { kana: "ね", romaji: "ne" }, { kana: "の", romaji: "no" }, { kana: "は", romaji: "ha" }, { kana: "ひ", romaji: "hi" }, { kana: "ふ", romaji: "fu" }, { kana: "へ", romaji: "he" }, { kana: "ほ", romaji: "ho" }, { kana: "ま", romaji: "ma" }, { kana: "み", romaji: "mi" }, { kana: "む", romaji: "mu" }, { kana: "め", romaji: "me" }, { kana: "も", romaji: "mo" }, { kana: "や", romaji: "ya" }, { kana: "ゆ", romaji: "yu" }, { kana: "よ", romaji: "yo" }, { kana: "ら", romaji: "ra" }, { kana: "り", romaji: "ri" }, { kana: "る", romaji: "ru" }, { kana: "れ", romaji: "re" }, { kana: "ろ", romaji: "ro" }, { kana: "わ", romaji: "wa" }, { kana: "を", romaji: "o" }, { kana: "ん", romaji: "n" }, { kana: "が", romaji: "ga" }, { kana: "ぎ", romaji: "gi" }, { kana: "ぐ", romaji: "gu" }, { kana: "げ", romaji: "ge" }, { kana: "ご", romaji: "go" }, { kana: "ざ", romaji: "za" }, { kana: "じ", romaji: "ji" }, { kana: "ず", romaji: "zu" }, { kana: "ぜ", romaji: "ze" }, { kana: "ぞ", romaji: "zo" }, { kana: "だ", romaji: "da" }, { kana: "ぢ", romaji: "ji" }, { kana: "づ", romaji: "zu" }, { kana: "で", romaji: "de" }, { kana: "ど", romaji: "do" }, { kana: "ば", romaji: "ba" }, { kana: "び", romaji: "bi" }, { kana: "ぶ", romaji: "bu" }, { kana: "べ", romaji: "be" }, { kana: "ぼ", romaji: "bo" }, { kana: "ぱ", romaji: "pa" }, { kana: "ぴ", romaji: "pi" }, { kana: "ぷ", romaji: "pu" }, { kana: "ぺ", romaji: "pe" }, { kana: "ぽ", romaji: "po" }, { kana: "きゃ", romaji: "kya" }, { kana: "きゅ", romaji: "kyu" }, { kana: "きょ", romaji: "kyo" }, { kana: "しゃ", romaji: "sha" }, { kana: "しゅ", romaji: "shu" }, { kana: "しょ", romaji: "sho" }, { kana: "ちゃ", romaji: "cha" }, { kana: "ちゅ", romaji: "chu" }, { kana: "ちょ", romaji: "cho" }, { kana: "にゃ", romaji: "nya" }, { kana: "にゅ", romaji: "nyu" }, { kana: "にょ", romaji: "nyo" }, { kana: "ひゃ", romaji: "hya" }, { kana: "ひゅ", romaji: "hyu" }, { kana: "ひょ", romaji: "hyo" }, { kana: "みゃ", romaji: "mya" }, { kana: "みゅ", romaji: "myu" }, { kana: "みょ", romaji: "myo" }, { kana: "りゃ", romaji: "rya" }, { kana: "りゅ", romaji: "ryu" }, { kana: "りょ", romaji: "ryo" }, { kana: "ぎゃ", romaji: "gya" }, { kana: "ぎゅ", romaji: "gyu" }, { kana: "ぎょ", romaji: "gyo" }, { kana: "じゃ", romaji: "ja" }, { kana: "じゅ", romaji: "ju" }, { kana: "じょ", romaji: "jo" }, { kana: "ぢゃ", romaji: "ja" }, { kana: "ぢゅ", romaji: "ju" }, { kana: "ぢょ", romaji: "jo" }, { kana: "びゃ", romaji: "bya" }, { kana: "びゅ", romaji: "byu" }, { kana: "びょ", romaji: "byo" }, { kana: "ぴゃ", romaji: "pya" }, { kana: "ぴゅ", romaji: "pyu" }, { kana: "ぴょ", romaji: "pyo" } ];
+        const katakanaChars = [ { kana: "ア", romaji: "a" }, { kana: "イ", romaji: "i" }, { kana: "ウ", romaji: "u" }, { kana: "エ", romaji: "e" }, { kana: "オ", romaji: "o" }, { kana: "カ", romaji: "ka" }, { kana: "キ", romaji: "ki" }, { kana: "ク", romaji: "ku" }, { kana: "ケ", romaji: "ke" }, { kana: "コ", romaji: "ko" }, { kana: "サ", romaji: "sa" }, { kana: "シ", romaji: "shi" }, { kana: "ス", romaji: "su" }, { kana: "セ", romaji: "se" }, { kana: "ソ", romaji: "so" }, { kana: "タ", romaji: "ta" }, { kana: "チ", romaji: "chi" }, { kana: "ツ", romaji: "tsu" }, { kana: "テ", romaji: "te" }, { kana: "ト", romaji: "to" }, { kana: "ナ", romaji: "na" }, { kana: "ニ", romaji: "ni" }, { kana: "ヌ", romaji: "nu" }, { kana: "ネ", romaji: "ne" }, { kana: "ノ", romaji: "no" }, { kana: "ハ", romaji: "ha" }, { kana: "ヒ", romaji: "hi" }, { kana: "フ", romaji: "fu" }, { kana: "ヘ", romaji: "he" }, { kana: "ホ", romaji: "ho" }, { kana: "マ", romaji: "ma" }, { kana: "ミ", romaji: "mi" }, { kana: "ム", romaji: "mu" }, { kana: "メ", romaji: "me" }, { kana: "モ", romaji: "mo" }, { kana: "ヤ", romaji: "ya" }, { kana: "ユ", romaji: "yu" }, { kana: "ヨ", romaji: "yo" }, { kana: "ラ", romaji: "ra" }, { kana: "リ", romaji: "ri" }, { kana: "ル", romaji: "ru" }, { kana: "レ", romaji: "re" }, { kana: "ロ", romaji: "ro" }, { kana: "ワ", romaji: "wa" }, { kana: "ヲ", romaji: "o" }, { kana: "ン", romaji: "n" }, { kana: "ガ", romaji: "ga" }, { kana: "ギ", romaji: "gi" }, { kana: "グ", romaji: "gu" }, { kana: "ゲ", romaji: "ge" }, { kana: "ゴ", romaji: "go" }, { kana: "ザ", romaji: "za" }, { kana: "ジ", romaji: "ji" }, { kana: "ズ", romaji: "zu" }, { kana: "ゼ", romaji: "ze" }, { kana: "ゾ", romaji: "zo" }, { kana: "ダ", romaji: "da" }, { kana: "ヂ", romaji: "ji" }, { kana: "ヅ", romaji: "zu" }, { kana: "デ", romaji: "de" }, { kana: "ド", romaji: "do" }, { kana: "バ", romaji: "ba" }, { kana: "ビ", romaji: "bi" }, { kana: "ブ", romaji: "bu" }, { kana: "ベ", romaji: "be" }, { kana: "ボ", romaji: "bo" }, { kana: "パ", romaji: "pa" }, { kana: "ピ", romaji: "pi" }, { kana: "プ", romaji: "pu" }, { kana: "ペ", romaji: "pe" }, { kana: "ポ", romaji: "po" }, { kana: "キャ", romaji: "kya" }, { kana: "キュ", romaji: "kyu" }, { kana: "キョ", romaji: "kyo" }, { kana: "シャ", romaji: "sha" }, { kana: "シュ", romaji: "shu" }, { kana: "ショ", romaji: "sho" }, { kana: "チャ", romaji: "cha" }, { kana: "チュ", romaji: "chu" }, { kana: "チョ", romaji: "cho" }, { kana: "ニャ", romaji: "nya" }, { kana: "ニュ", romaji: "nyu" }, { kana: "ニョ", romaji: "nyo" }, { kana: "ヒャ", romaji: "hya" }, { kana: "ヒュ", romaji: "hyu" }, { kana: "ヒョ", romaji: "hyo" }, { kana: "ミャ", romaji: "mya" }, { kana: "ミュ", romaji: "myu" }, { kana: "ミョ", romaji: "myo" }, { kana: "リャ", romaji: "rya" }, { kana: "リュ", romaji: "ryu" }, { kana: "リョ", romaji: "ryo" }, { kana: "ギャ", romaji: "gya" }, { kana: "ギュ", romaji: "gyu" }, { kana: "ギョ", romaji: "gyo" }, { kana: "ジャ", romaji: "ja" }, { kana: "ジュ", romaji: "ju" }, { kana: "ジョ", romaji: "jo" }, { kana: "ビャ", romaji: "bya" }, { kana: "ビュ", romaji: "byu" }, { kana: "ビョ", romaji: "byo" }, { kana: "ピャ", romaji: "pya" }, { kana: "ピュ", romaji: "pyu" }, { kana: "ピョ", romaji: "pyo" } ];
+        const extendedKatakanaChars = [ { kana: "シェ", romaji: "she" }, { kana: "チェ", romaji: "che" }, { kana: "ツァ", romaji: "tsa" }, { kana: "ツェ", romaji: "tse" }, { kana: "ツォ", romaji: "tso" }, { kana: "ティ", romaji: "ti" }, { kana: "ディ", romaji: "di" }, { kana: "ファ", romaji: "fa" }, { kana: "フィ", romaji: "fi" }, { kana: "フェ", romaji: "fe" }, { kana: "フォ", romaji: "fo" }, { kana: "ジェ", romaji: "je" }, { kana: "デュ", romaji: "dyu" }, { kana: "イェ", romaji: "ye" }, { kana: "ウィ", romaji: "wi" }, { kana: "ウェ", romaji: "we" }, { kana: "ウォ", romaji: "wo" }, { kana: "クァ", romaji: "kwa" }, { kana: "クィ", romaji: "kwi" }, { kana: "クェ", romaji: "kwe" }, { kana: "クォ", romaji: "kwo" }, { kana: "ツィ", romaji: "tsi" }, { kana: "トゥ", romaji: "tu" }, { kana: "ドゥ", romaji: "du" }, { kana: "ヴァ", romaji: "va" }, { kana: "ヴィ", romaji: "vi" }, { kana: "ヴ", romaji: "vu" }, { kana: "ヴェ", romaji: "ve" }, { kana: "ヴォ", romaji: "vo" }, { kana: "テュ", romaji: "tyu" }, { kana: "フュ", romaji: "fyu" }, { kana: "ヴュ", romaji: "vyu" } ];
+        
         let vocabularyLessons = {};
-        let vocabularyL1_12 = [];
+        let allLoadedVocabulary = [];
 
-        // --- DOM Elements ---
         const settingsScreen = document.getElementById('settingsScreen');
-        // (Rest der DOM-Elemente bleibt gleich)
+        const learningScreen = document.getElementById('learningScreen');
         const loadVocabButton = document.getElementById('loadVocabButton');
         const vocabFileInput = document.getElementById('vocabFileInput');
         const loadStatus = document.getElementById('loadStatus');
-        const vocabLabel = document.getElementById('vocabLabel');
+        const useHiraganaCheckbox = document.getElementById('useHiragana');
+        const useKatakanaCheckbox = document.getElementById('useKatakana');
+        const useExtendedKatakanaCheckbox = document.getElementById('useExtendedKatakana');
         const useVocabularyCheckbox = document.getElementById('useVocabulary');
+        const vocabLabel = document.getElementById('vocabLabel');
         const vocabLessonSelectContainer = document.getElementById('vocabLessonSelectContainer');
         const vocabLessonSelect = document.getElementById('vocabLessonSelect');
-        // (weitere DOM-Elemente...)
+        const noSetSelectedError = document.getElementById('noSetSelectedError');
+        const startButton = document.getElementById('startButton');
+        const backToSettingsButton = document.getElementById('backToSettingsButton');
+        const restartButton = document.getElementById('restartButton');
+        const resetSessionButton = document.getElementById('resetSessionButton');
+        const characterDisplay = document.getElementById('characterDisplay');
+        const romajiInput = document.getElementById('romajiInput');
+        const submitGuessButton = document.getElementById('submitGuessButton');
+        const showAnswerButton = document.getElementById('showAnswerButton');
+        const feedbackArea = document.getElementById('feedbackArea');
+        const progressBar = document.getElementById('progressBar');
+        const progressLabel = document.getElementById('progressLabel');
+        const queueCountDisplay = document.getElementById('queueCountDisplay');
+        const attemptCountDisplay = document.getElementById('attemptCountDisplay');
+        const completionMessage = document.getElementById('completionMessage');
+        const finalScore = document.getElementById('finalScore');
         
-        // --- App State --- (bleibt gleich)
         let selectedInitialChars = []; 
         let practiceQueue = []; 
         let currentKanaObject = null; 
@@ -153,22 +130,18 @@
         let totalInitialChars = 0; 
         let characterAttemptedThisTurn = false;
 
-        // --- Funktionen ---
-        
-        // Funktion zum Aktualisieren der Vokabel-UI
         function updateVocabUI() {
             if (Object.keys(vocabularyLessons).length > 0) {
                 vocabLessonSelect.innerHTML = '<option value="all">Alle geladenen Lektionen</option>';
                 for (const lessonKey in vocabularyLessons) {
                     const option = document.createElement('option');
                     option.value = lessonKey;
-                    // Macht den ersten Buchstaben groß, falls es ein Wort ist
-                    option.textContent = lessonKey.charAt(0).toUpperCase() + lessonKey.slice(1);
+                    option.textContent = lessonKey.charAt(0).toUpperCase() + lessonKey.slice(1).replace(/_/g, ' ');
                     vocabLessonSelect.appendChild(option);
                 }
                 useVocabularyCheckbox.disabled = false;
                 vocabLabel.classList.remove('text-gray-500');
-                loadStatus.textContent = `${vocabularyL1_12.length} Vokabeln aus ${Object.keys(vocabularyLessons).length} Lektionen geladen.`;
+                loadStatus.textContent = `${allLoadedVocabulary.length} Vokabeln aus ${Object.keys(vocabularyLessons).length} Lektionen geladen.`;
                 loadStatus.classList.add('text-green-600');
             } else {
                 useVocabularyCheckbox.disabled = true;
@@ -179,38 +152,29 @@
             }
         }
         
-        // Funktion zum Verarbeiten der geladenen Datei
         function processVocabFile(content) {
             try {
-                // Führt den Code aus der Datei aus. Dies definiert die Vokabelvariablen.
-                // WICHTIG: Nur JS-Dateien aus vertrauenswürdigen Quellen laden!
-                (new Function(content))(); 
-
-                // Diese Variablen sollten jetzt global verfügbar sein (durch die Ausführung des Skripts)
-                // Wir speichern sie sicher in unseren App-Variablen.
-                if (typeof window.vocabularyLessons !== 'undefined') {
-                    vocabularyLessons = window.vocabularyLessons;
-                    vocabularyL1_12 = Object.values(vocabularyLessons).flat();
+                const parsedData = JSON.parse(content);
+                if (parsedData && parsedData.lessons) {
+                    vocabularyLessons = parsedData.lessons;
+                    allLoadedVocabulary = Object.values(vocabularyLessons).flat();
                     
-                    // Speichert die Vokabeln im Browser-Speicher
                     localStorage.setItem('userVocab', JSON.stringify({
-                        lessons: vocabularyLessons,
-                        all: vocabularyL1_12
+                        lessons: vocabularyLessons
                     }));
 
                     updateVocabUI();
                 } else {
-                    throw new Error("Die Datei scheint keine 'vocabularyLessons'-Variable zu definieren.");
+                    throw new Error("JSON-Datei hat nicht die erwartete Struktur: { \"lessons\": { ... } }");
                 }
             } catch (e) {
                 console.error("Fehler beim Verarbeiten der Vokabeldatei:", e);
-                loadStatus.textContent = "Fehler: Datei konnte nicht gelesen werden.";
+                loadStatus.textContent = `Fehler: ${e.message}`;
                 loadStatus.classList.remove('text-green-600');
+                loadStatus.classList.add('text-red-600');
             }
         }
 
-        // Rest der App-Logik (startLearningSession, processAnswer, etc.)
-        // (Die Funktionen von vorher bleiben hier, angepasst an die dynamischen Daten)
         function startLearningSession() {
             const includeHiragana = useHiraganaCheckbox.checked;
             const includeKatakana = useKatakanaCheckbox.checked;
@@ -225,7 +189,7 @@
             
             if (includeVocabulary) {
                 if (selectedLesson === "all") {
-                    selectedInitialChars.push(...vocabularyL1_12);
+                    selectedInitialChars.push(...allLoadedVocabulary);
                 } else {
                     selectedInitialChars.push(...(vocabularyLessons[selectedLesson] || []));
                 }
@@ -254,7 +218,7 @@
             timesCorrectNeeded = {}; 
             score = { mastered: 0, attempts: 0 };
             completionMessage.classList.add('hidden');
-            showMainLearningUI();
+            learningScreen.classList.remove('hidden');
             loadNextCharacterFromQueue();
         }
         
@@ -268,9 +232,10 @@
                 const unmasteredChars = selectedInitialChars.filter(char => timesCorrectNeeded.hasOwnProperty(char.kana));
                 if (unmasteredChars.length > 0) {
                     practiceQueue = shuffleArray([...unmasteredChars]);
-                } else if (totalInitialChars > 0 && score.mastered === totalInitialChars) {
+                } else if (totalInitialChars > 0 && score.mastered >= totalInitialChars) {
                     displayCompletion(); return;
                 } else { goBackToSettings(); return; }
+                 if (practiceQueue.length === 0) { displayCompletion(); return; }
             }
             
             currentKanaObject = practiceQueue.shift();
@@ -291,7 +256,10 @@
         }
         
         function updateStatsDisplay() {
-            score.mastered = selectedInitialChars.filter(char => !timesCorrectNeeded.hasOwnProperty(char.kana)).length;
+            score.mastered = totalInitialChars - Object.keys(timesCorrectNeeded).length - practiceQueue.length;
+            if (currentKanaObject) score.mastered--;
+            score.mastered = Math.max(0, score.mastered);
+            
             const masteryPercentage = totalInitialChars > 0 ? (score.mastered / totalInitialChars) * 100 : 0;
             progressBar.style.width = `${masteryPercentage}%`;
             progressLabel.textContent = `Mastered: ${score.mastered} / ${totalInitialChars}`;
@@ -310,9 +278,8 @@
         function processAnswer(isCorrect) {
             if (!currentKanaObject) return;
             const kanaKey = currentKanaObject.kana;
-
             if (isCorrect) {
-                feedbackArea.innerHTML = `Correct! 🎉 - : <span class="text-blue-600">${currentKanaObject.german}</span>`;
+                feedbackArea.innerHTML = `Correct! 🎉 <span class="text-blue-600">(${currentKanaObject.german})</span>`;
                 feedbackArea.classList.add('feedback-correct');
                 if (timesCorrectNeeded.hasOwnProperty(kanaKey)) { 
                     timesCorrectNeeded[kanaKey]--;
@@ -321,7 +288,7 @@
             } else {
                 feedbackArea.innerHTML = `X. Answer: ${getAnswerText(currentKanaObject)}`;
                 feedbackArea.classList.add('feedback-incorrect');
-                timesCorrectNeeded[kanaKey] = 2;
+                timesCorrectNeeded[kanaKey] = (timesCorrectNeeded[kanaKey] || 0) + 2;
                 practiceQueue.push(currentKanaObject);
                 shuffleArray(practiceQueue);
             }
@@ -356,19 +323,10 @@
             processAnswer(false);
         }
         
-        function showMainLearningUI() {
-            learningScreen.classList.remove('hidden');
-        }
-
-        function hideMainLearningUI() {
-            learningScreen.classList.add('hidden');
-        }
-
         function displayCompletion() {
-            hideMainLearningUI();
+            learningScreen.classList.add('hidden');
             completionMessage.classList.remove('hidden');
-            score.mastered = selectedInitialChars.filter(char => !timesCorrectNeeded.hasOwnProperty(char.kana)).length;
-            finalScore.textContent = `Mastered: ${score.mastered} / ${totalInitialChars} in ${score.attempts} attempts.`;
+            finalScore.textContent = `Mastered: ${totalInitialChars} / ${totalInitialChars} in ${score.attempts} attempts.`;
         }
         
         function goBackToSettings() {
@@ -378,14 +336,20 @@
             noSetSelectedError.classList.add('hidden');
         }
 
-        // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
             const savedVocab = localStorage.getItem('userVocab');
             if (savedVocab) {
-                const parsedData = JSON.parse(savedVocab);
-                vocabularyLessons = parsedData.lessons;
-                vocabularyL1_12 = parsedData.all;
-                updateVocabUI();
+                try {
+                    const parsedData = JSON.parse(savedVocab);
+                    if(parsedData.lessons) {
+                        vocabularyLessons = parsedData.lessons;
+                        allLoadedVocabulary = Object.values(vocabularyLessons).flat();
+                        updateVocabUI();
+                    }
+                } catch(e) {
+                    console.error("Fehler beim Laden der Vokabeln aus dem Speicher:", e);
+                    localStorage.removeItem('userVocab');
+                }
             }
         });
 
